@@ -1,0 +1,30 @@
+{
+  "name": "topsport",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "./node_modules/.bin/tsc --watch",
+    "lint": "./node_modules/.bin/tslint -c tslint.json --project test/_config/tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "node dist/index"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/koa": "^2.13.3",
+    "@types/koa-bodyparser": "^4.3.1",
+    "@types/koa-router": "^7.4.2",
+    "@types/koa2-cors": "^2.0.1",
+    "@types/sqlite3": "^3.1.7",
+    "crypto-js": "^4.0.0",
+    "jest": "^26.6.3",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-router": "^10.0.0",
+    "koa2-cors": "^2.0.6",
+    "log4js": "^6.3.0",
+    "sqlite3": "^5.0.2"
+  }
+}
