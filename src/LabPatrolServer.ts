@@ -3,6 +3,7 @@ import {Context} from 'koa'
 import  logger from './logger.js'
 import {LabDataFetch} from "./LabDataFetch"
 import {TableSchema} from "./DataStore"
+import { DBType } from "./LabPatrolPub"
 
 type FetchResponse = {
     code: number,
@@ -25,6 +26,39 @@ class LabPatrolServer extends BackendServer {
 
 
     }
+
+    async queryData(dbType: number, filter: string):Promise<TableSchema[]> {
+        let rows:TableSchema[] = []
+        switch(dbType) {
+            case DBType.DBType_AXOS_CARD:
+                rows = await this.labData?.queryAxosCard() as TableSchema[]
+                break;
+            case DBType.DBType_EXA_CARD:
+                rows = await this.labData?.queryExaCard() as TableSchema[]
+                break;
+            case DBType.DBType_AXOS_ONT:
+                rows = await this.labData?.queryAxosOnt() as TableSchema []
+                break;
+            case DBType.DBType_EXA_ONT:
+                rows = await this.labData?.queryExaOnt() as TableSchema[]
+                break;
+        }
+
+        if (filter === '') {
+            return rows
+        }
+        let filterRow:TableSchema[] = []
+        for (let ii = 0; ii < rows.length; ii++) {
+            for (let key in rows[ii]) {
+                if (rows[ii][key].indexOf(filter) != -1) {
+                    filterRow.push(rows[ii])
+                    break
+                }
+            }
+        }
+        return filterRow
+    }
+
     async init() {
         let that = this;
         await this.loadTableInfo()
@@ -34,6 +68,7 @@ class LabPatrolServer extends BackendServer {
             let ctxQuery = ctx.query;
             let startIdx = 0;
             let eachFetch = that.eachFetch;
+            let filter = ''
             // console.log(ctx)
             if (ctxQuery.eachFetch) {
                 eachFetch = +ctxQuery.eachFetch;
@@ -43,13 +78,16 @@ class LabPatrolServer extends BackendServer {
                 startIdx = (+ctxQuery.pageNum - 1) * eachFetch;
             }
 
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
 
             ctx.set('Content-Type', 'application/json')
             ctx.set("Access-Control-Allow-Origin", "*");
             try {
                 // let result = await this.login.run(data) || {}
 
-                let rows = await that.labData?.queryExaCard() as TableSchema[]
+                let rows = await that.queryData(DBType.DBType_EXA_CARD, filter) as TableSchema[]
                 let res:TableSchema[] =[]
                 let resCount = 0;
                 let totalCount = 0;
@@ -81,6 +119,7 @@ class LabPatrolServer extends BackendServer {
             let ctxQuery = ctx.query;
             let startIdx = 0;
             let eachFetch = that.eachFetch;
+            let filter = ''
             // console.log(ctx)
             if (ctxQuery.eachFetch) {
                 eachFetch = +ctxQuery.eachFetch;
@@ -90,13 +129,15 @@ class LabPatrolServer extends BackendServer {
                 startIdx = (+ctxQuery.pageNum - 1) * eachFetch;
             }
 
-
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
             ctx.set('Content-Type', 'application/json')
             ctx.set("Access-Control-Allow-Origin", "*");
             try {
                 // let result = await this.login.run(data) || {}
 
-                let rows = await that.labData?.queryAxosCard() as TableSchema[]
+                let rows = await that.queryData(DBType.DBType_AXOS_CARD, filter) as TableSchema[]
                 let res:TableSchema[] =[]
                 let resCount = 0;
                 let totalCount = 0;
@@ -128,6 +169,7 @@ class LabPatrolServer extends BackendServer {
             let ctxQuery = ctx.query;
             let startIdx = 0;
             let eachFetch = that.eachFetch;
+            let filter = ''
             // console.log(ctx)
             if (ctxQuery.eachFetch) {
                 eachFetch = +ctxQuery.eachFetch;
@@ -137,13 +179,17 @@ class LabPatrolServer extends BackendServer {
                 startIdx = (+ctxQuery.pageNum - 1) * eachFetch;
             }
 
-
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
+            
             ctx.set('Content-Type', 'application/json')
             ctx.set("Access-Control-Allow-Origin", "*");
             try {
                 // let result = await this.login.run(data) || {}
 
-                let rows = await that.labData?.queryExaOnt() as TableSchema[]
+                let rows = await that.queryData(DBType.DBType_EXA_ONT, filter) as TableSchema[]
+ 
                 let res:TableSchema[] =[]
                 let resCount = 0;
                 let totalCount = 0;
@@ -176,6 +222,7 @@ class LabPatrolServer extends BackendServer {
             let ctxQuery = ctx.query;
             let startIdx = 0;
             let eachFetch = that.eachFetch;
+            let filter = ''
             // console.log(ctx)
             if (ctxQuery.eachFetch) {
                 eachFetch = +ctxQuery.eachFetch;
@@ -185,13 +232,15 @@ class LabPatrolServer extends BackendServer {
                 startIdx = (+ctxQuery.pageNum - 1) * eachFetch;
             }
 
-
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
             ctx.set('Content-Type', 'application/json')
             ctx.set("Access-Control-Allow-Origin", "*");
             try {
                 // let result = await this.login.run(data) || {}
-
-                let rows = await that.labData?.queryAxosOnt() as TableSchema[]
+                let rows = await that.queryData(DBType.DBType_AXOS_ONT, filter) as TableSchema[]
+ 
                 let res:TableSchema[] =[]
                 let resCount = 0;
                 let totalCount = 0;
