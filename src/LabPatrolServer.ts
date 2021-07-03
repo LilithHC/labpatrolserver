@@ -42,6 +42,12 @@ class LabPatrolServer extends BackendServer {
             case DBType.DBType_EXA_ONT:
                 rows = await this.labData?.queryExaOnt() as TableSchema[]
                 break;
+            case DBType.DBType_EXA_MODULE:
+                rows = await this.labData?.queryExaModule() as TableSchema[]
+                break;    
+            case DBType.DBType_AXOS_MODULE:
+                rows = await this.labData?.queryAxosModule() as TableSchema[]
+                break;                             
         }
 
         if (filter === '') {
@@ -223,7 +229,7 @@ class LabPatrolServer extends BackendServer {
             let startIdx = 0;
             let eachFetch = that.eachFetch;
             let filter = ''
-            // console.log(ctx)
+
             if (ctxQuery.eachFetch) {
                 eachFetch = +ctxQuery.eachFetch;
             }
@@ -268,6 +274,64 @@ class LabPatrolServer extends BackendServer {
 
         this.registRouteCall({ type: 'get', route: '/axosont', callBack: fetchAxosOntCallBack }) 
 
+        let fetchCommonCallBack = async function (ctx:Context, next:any) {
+            ctx.status = 200;
+            let ctxQuery = ctx.query;
+            let startIdx = 0;
+            let eachFetch = that.eachFetch;
+            let filter = ''
+            if (ctxQuery.eachFetch) {
+                eachFetch = +ctxQuery.eachFetch;
+            }
+            // start from 0
+            if (ctxQuery.pageNum) {
+                startIdx = (+ctxQuery.pageNum - 1) * eachFetch;
+            }
+
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
+            ctx.set('Content-Type', 'application/json')
+            ctx.set("Access-Control-Allow-Origin", "*");
+            try {
+                let dbType = DBType.DBType_AXOS_MODULE
+                if (ctx.request.url) {
+                    if (ctx.request.url.toLowerCase().indexOf('axosmodule') != -1) {
+                        dbType = DBType.DBType_AXOS_MODULE
+                    }else if (ctx.request.url.toLowerCase().indexOf('examodule') != -1) {
+                        dbType = DBType.DBType_EXA_MODULE
+                    }
+                }
+
+                // let result = await this.login.run(data) || {}
+                let rows = await that.queryData(dbType, filter) as TableSchema[]
+ 
+                let res:TableSchema[] =[]
+                let resCount = 0;
+                let totalCount = 0;
+                if (rows && rows.length > 0 && startIdx < rows.length){
+                    totalCount = rows.length
+                    for (let jj = startIdx; jj < startIdx + eachFetch && jj < rows.length; jj++) {
+                        res.push(rows[jj])
+                        resCount++;
+                    }
+                }
+                let result:FetchResponse = {
+                    code:200, 
+                    message: {
+                        totalCount: totalCount,
+                        resCount:resCount,
+                        res:res
+                    }
+                }
+                // ctx.set('set-cookie', _.get(result, 'cookies', []).map(cookie => typeof (cookie) === 'string' ? cookie : `${cookie.name}=${cookie.value}`).join('; '))
+                ctx.response.body = result;
+            } catch (e) {
+                logger.error('error handle fetch get')
+            }
+        }
+        this.registRouteCall({ type: 'get', route: '/axosmodule', callBack: fetchCommonCallBack }) 
+        this.registRouteCall({ type: 'get', route: '/examodule', callBack: fetchCommonCallBack }) 
         let updateCheckCallBack = async function (ctx:Context, next:any) {
             ctx.status = 200;
             let response = {}
