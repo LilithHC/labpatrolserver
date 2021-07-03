@@ -22,7 +22,7 @@ class LabPatrolServer extends BackendServer {
 
     async loadTableInfo() {
         this.labData = new LabDataFetch()
-        await this.labData.openDb('./labpatrol.db')
+        await this.labData.openDb('../labpatrol/labpatrol.db')
 
 
     }
@@ -56,7 +56,7 @@ class LabPatrolServer extends BackendServer {
         let filterRow:TableSchema[] = []
         for (let ii = 0; ii < rows.length; ii++) {
             for (let key in rows[ii]) {
-                if (rows[ii][key].indexOf(filter) != -1) {
+                if (rows[ii][key].toLowerCase().indexOf(filter.toLowerCase()) != -1) {
                     filterRow.push(rows[ii])
                     break
                 }
