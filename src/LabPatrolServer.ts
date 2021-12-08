@@ -350,6 +350,71 @@ class LabPatrolServer extends BackendServer {
 
         this.registRouteCall({ type: 'post', route: '/update', callBack: updateCheckCallBack })
 
+        let fetchCommonIpCallBack = async function (ctx:Context, next:any) {
+            ctx.status = 200;
+            let ctxQuery = ctx.query;
+            let filter = ''
+
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
+            ctx.set('Content-Type', 'application/json')
+            ctx.set("Access-Control-Allow-Origin", "*");
+            try {
+                let dbType = DBType.DBType_AXOS_MODULE
+                if (ctx.request.url) {
+                    if (ctx.request.url.toLowerCase().indexOf('axosmoduleip') != -1) {
+                        dbType = DBType.DBType_AXOS_MODULE
+                    }else if (ctx.request.url.toLowerCase().indexOf('examoduleip') != -1) {
+                        dbType = DBType.DBType_EXA_MODULE
+                    }else if (ctx.request.url.toLowerCase().indexOf('axoscardip') != -1) {
+                        dbType = DBType.DBType_AXOS_CARD
+                    }else if (ctx.request.url.toLowerCase().indexOf('exacardip') != -1) {
+                        dbType = DBType.DBType_EXA_CARD
+                    }else if (ctx.request.url.toLowerCase().indexOf('axosontip') != -1) {
+                        dbType = DBType.DBType_AXOS_ONT
+                    }else if (ctx.request.url.toLowerCase().indexOf('exaontip') != -1) {
+                        dbType = DBType.DBType_EXA_ONT
+                    }
+                }
+
+                // let result = await this.login.run(data) || {}
+                let rows = await that.queryData(dbType, filter) as TableSchema[]
+ 
+                let res:TableSchema[] =[]
+                let totalCount = 0;
+                let ipList:string[] = []
+                if (rows && rows.length > 0) {
+                    totalCount = rows.length
+                    for (let jj = 0; jj < rows.length; jj++) {
+                        if (ipList.includes(rows[jj]['address'])) {
+                            continue
+                        }
+                        ipList.push(rows[jj]['address'])
+                        res.push({'address':rows[jj]['address']})
+                    }
+                }
+                let result:FetchResponse = {
+                    code:200, 
+                    message: {
+                        totalCount: totalCount,
+                        resCount:0,
+                        res:res
+                    }
+                }
+                // ctx.set('set-cookie', _.get(result, 'cookies', []).map(cookie => typeof (cookie) === 'string' ? cookie : `${cookie.name}=${cookie.value}`).join('; '))
+                ctx.response.body = result;
+            } catch (e) {
+                logger.error('error handle fetch get')
+            }
+        }
+        this.registRouteCall({ type: 'get', route: '/axosmoduleip', callBack: fetchCommonIpCallBack }) 
+        this.registRouteCall({ type: 'get', route: '/examoduleip', callBack: fetchCommonIpCallBack }) 
+        this.registRouteCall({ type: 'get', route: '/axoscardip', callBack: fetchCommonIpCallBack }) 
+        this.registRouteCall({ type: 'get', route: '/exacardip', callBack: fetchCommonIpCallBack }) 
+        this.registRouteCall({ type: 'get', route: '/axosontip', callBack: fetchCommonIpCallBack }) 
+        this.registRouteCall({ type: 'get', route: '/exaontip', callBack: fetchCommonIpCallBack }) 
+
     }
 
 }
