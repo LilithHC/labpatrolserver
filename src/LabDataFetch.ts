@@ -27,7 +27,9 @@ export class LabDataFetch {
                                          'exaCard':"",
                                         'exaOnt':"",
                                         'axosmodule':"",
-                                        'examodule':""}
+                                        'examodule':"",
+                                        "axoslldp":"",
+                                        "exalldp":""}
         let rows = await this.dbStore?.queryAll(this.availableDescTableName)      
         if (!rows || (rows as []).length == 0) {
             return ''
@@ -51,9 +53,12 @@ export class LabDataFetch {
             case DBType.DBType_AXOS_MODULE:
                 return rowString[0]['axosModule']
                 break;
-            case DBType.DBType_EXA_MODULE:
-                return rowString[0]['exaModule']
+            case DBType.DBType_AXOS_LLDP:
+                return rowString[0]['axosLldp']
                 break;
+                case DBType.DBType_EXA_LLDP:
+                return rowString[0]['exaLldp']
+                 break;                
             default:
                 break;
         }
@@ -120,5 +125,25 @@ export class LabDataFetch {
         }
         exaOnt = await this.dbStore?.queryAll(tableName) as TableSchema[]
         return exaOnt;
-    }        
+    }     
+    
+    async queryAxosLldp() {
+        let exaOnt:TableSchema[] =[]
+        let tableName = await this.getCurrentDbName(DBType.DBType_AXOS_LLDP)
+        if (tableName === '') {
+            return exaOnt
+        }
+        exaOnt = await this.dbStore?.queryAll(tableName) as TableSchema[]
+        return exaOnt;
+    }   
+    
+    async queryExaLldp() {
+        let exaOnt:TableSchema[] =[]
+        let tableName = await this.getCurrentDbName(DBType.DBType_EXA_LLDP)
+        if (tableName === '') {
+            return exaOnt
+        }
+        exaOnt = await this.dbStore?.queryAll(tableName) as TableSchema[]
+        return exaOnt;
+    }       
 }

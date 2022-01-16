@@ -14,6 +14,8 @@ dist/logger.d.ts
 dist/MokeData.d.ts
 dist/MokeData.js
 dist/logs
+dist/DiagPub.d.ts
+dist/DiagPub.js
 logs/
 node_modules/
 package-lock.json

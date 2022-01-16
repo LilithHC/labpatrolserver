@@ -4,6 +4,7 @@ import  logger from './logger.js'
 import {LabDataFetch} from "./LabDataFetch"
 import {TableSchema} from "./DataStore"
 import { DBType } from "./LabPatrolPub"
+import {DiagLldpConn, DiagLldpNode} from "./DiagPub"
 
 type FetchResponse = {
     code: number,
@@ -13,6 +14,16 @@ type FetchResponse = {
         res:TableSchema[]
     }
 }
+
+type FetchTopoResponse = {
+    code: number,
+    message: {
+        totalCount: number,
+        resCount:number,
+        res:DiagLldpNode[]
+    }
+}
+
 class LabPatrolServer extends BackendServer {
     labData:LabDataFetch|undefined;
     eachFetch:number = 100
@@ -47,7 +58,13 @@ class LabPatrolServer extends BackendServer {
                 break;    
             case DBType.DBType_AXOS_MODULE:
                 rows = await this.labData?.queryAxosModule() as TableSchema[]
-                break;                             
+                break;       
+            case DBType.DBType_AXOS_LLDP:
+                rows = await this.labData?.queryAxosLldp() as TableSchema[]
+                break;                  
+            case DBType.DBType_EXA_LLDP:
+                rows = await this.labData?.queryExaLldp() as TableSchema[]
+                break;                  
         }
 
         if (filter === '') {
@@ -414,6 +431,79 @@ class LabPatrolServer extends BackendServer {
         this.registRouteCall({ type: 'get', route: '/exacardip', callBack: fetchCommonIpCallBack }) 
         this.registRouteCall({ type: 'get', route: '/axosontip', callBack: fetchCommonIpCallBack }) 
         this.registRouteCall({ type: 'get', route: '/exaontip', callBack: fetchCommonIpCallBack }) 
+
+        /*
+        SHELF ID,SLOT ID,PORT,DEST AGENT,AGENT REFERENCE,SYSTEM NAME TLV,PORT ID TLV,MANAGEMENT ADDRESS TLV,TTL TLV,RX INFO TTL
+        1,1,x4,nearest-bridge,1,GPON8-r2,IFN: 1/2/x1,10.245.34.155,121,115
+        */
+        let fetchAxosTopology = async function (ctx:Context, next:any) {
+            ctx.status = 200;
+            let ctxQuery = ctx.query;
+            let filter = ''
+
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
+            ctx.set('Content-Type', 'application/json')
+            ctx.set("Access-Control-Allow-Origin", "*");
+            try {
+                let dbType = DBType.DBType_AXOS_LLDP
+                // let result = await this.login.run(data) || {}
+                let lldprows = await that.queryData(dbType, filter) as TableSchema[]
+                dbType =  DBType.DBType_AXOS_CARD
+                let cardRows = await that.queryData(dbType, filter) as TableSchema[]
+                
+                if (cardRows === undefined || cardRows.length === 0)  {
+
+
+                }
+
+                let mapLldpInfo = new Map<string, DiagLldpNode>()
+
+                for (let cardNode of cardRows) {
+                    if (mapLldpInfo.get(cardNode['address'])=== undefined)  {
+                        mapLldpInfo.set(cardNode['address'],{
+                            selfIp: cardNode['address'],
+                            nodeName: cardNode['address'],
+                            conns:[]
+                        }) 
+                    }
+                }
+
+                for (let cardLldp of lldprows) {
+                    let lldp = <DiagLldpConn>{}
+                    lldp.peerIp = cardLldp['MANAGEMENT ADDRESS TLV']
+                    lldp.peerPort = cardLldp['PORT ID TLV']
+                    lldp.portSelf = cardLldp['SHELF ID'] + '/' + cardLldp['SLOT ID']  + '/' + cardLldp['PORT']
+                    lldp.selfIp = cardLldp['address']
+                    let mapFind = mapLldpInfo.get(cardLldp['address']) 
+                    if (mapFind === undefined) {
+                        mapFind = {
+                            selfIp: cardLldp['address'],
+                            nodeName: cardLldp['address'],
+                            conns:[]
+                        }
+                    }
+                    mapFind.conns.push(lldp)
+                }
+
+
+                let result:FetchTopoResponse = {
+                    code:200, 
+                    message: {
+                        totalCount: mapLldpInfo.size,
+                        resCount: mapLldpInfo.size,
+                        res:[...mapLldpInfo.values()]
+                    }
+                }
+                // ctx.set('set-cookie', _.get(result, 'cookies', []).map(cookie => typeof (cookie) === 'string' ? cookie : `${cookie.name}=${cookie.value}`).join('; '))
+                ctx.response.body = result;
+            } catch (e) {
+                console.log(e)
+                logger.error('error handle fetch get axosTopo')
+            }
+        }
+        this.registRouteCall({ type: 'get', route: '/axostopo', callBack: fetchAxosTopology }) 
 
     }
 
