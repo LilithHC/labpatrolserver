@@ -53,10 +53,13 @@ export class LabDataFetch {
             case DBType.DBType_AXOS_MODULE:
                 return rowString[0]['axosModule']
                 break;
+            case DBType.DBType_EXA_MODULE:
+                return rowString[0]['exaModule']
+               break;                
             case DBType.DBType_AXOS_LLDP:
                 return rowString[0]['axosLldp']
                 break;
-                case DBType.DBType_EXA_LLDP:
+            case DBType.DBType_EXA_LLDP:
                 return rowString[0]['exaLldp']
                  break;                
             default:
