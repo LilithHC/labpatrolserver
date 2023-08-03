@@ -6,6 +6,20 @@ import {TableSchema} from "./DataStore"
 import { DBType } from "./LabPatrolPub"
 import {DiagLldpConn, DiagLldpNode} from "./DiagPub"
 
+const nodemailer = require("nodemailer");
+const cron = require("node-cron")
+
+let transporter = nodemailer.createTransport({
+    host: "smtp.sina.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: 'testemail012@sina.com',
+      pass: 'a44e645444a76750'
+    }
+  });
+
+
 type FetchResponse = {
     code: number,
     message: {
@@ -512,6 +526,31 @@ if (__filename === require.main?.filename) {
     (async () => {
         let bkend = new LabPatrolServer(3721)
         await bkend.init();
+
+        //每分钟的第30s执行
+        cron.schedule('30 * * * * *',()=>{
+            let msg = {
+                from: "testemail012@sina.com", // sender address
+                to: "1149643038@qq.com", // list of receivers
+                subject: "card offline notify", // Subject line
+                text: "Newest message of card", // plain text body
+                html: "<b>Newest message of card</b>", // html body
+                // 考虑用附件形式发送
+            }
+
+            //满足条件
+            if(1>0){
+                transporter.sendMail(msg,(error:any,info:any)=>{
+                    if(error){
+                        throw error
+                    }else{
+                        console.log("Message sent!")
+                    }
+                })
+            }
+
+        })
+
 
         await bkend.run();
 

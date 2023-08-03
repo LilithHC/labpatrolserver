@@ -2,7 +2,7 @@ import {TableSchema, DataStore} from "./DataStore"
 import {DBType} from "./LabPatrolPub"
 
 export class LabDataFetch {
-    dbName:string=''
+    dbName:string='labpatrol.db'
     dbStore:DataStore|undefined
     currAxosCardTbName = ''
     currAxosOntTbName =''

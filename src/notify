@@ -1,0 +1,41 @@
+"use strict";
+const nodemailer = require("nodemailer");
+const cron = require("node-cron")
+
+let transporter = nodemailer.createTransport({
+  host: "smtp.sina.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'testemail012@sina.com',
+    pass: 'a44e645444a76750'
+  }
+});
+
+
+//每分钟的第30s执行
+cron.schedule('30 * * * * *',()=>{
+    let msg = {
+        from: "testemail012@sina.com", // sender address
+        to: "1149643038@qq.com", // list of receivers
+        subject: "card offline notify", // Subject line
+        text: "Newest message of card", // plain text body
+        html: "<b>Hello world?</b>", // html body
+    }
+
+    //满足条件
+    if(1>2){
+        transporter.sendMail(msg,(error,info)=>{
+            if(error){
+                throw error
+            }else{
+                console.log("Message sent!")
+            }
+        })
+    }
+
+})
+
+
+
+
