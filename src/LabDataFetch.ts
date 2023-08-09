@@ -1,5 +1,10 @@
 import {TableSchema, DataStore} from "./DataStore"
-import {DBType} from "./LabPatrolPub"
+import {DBType, LabPatroAny} from "./LabPatrolPub"
+
+export interface MonthDict {
+    [attr: string]: number
+}
+
 
 export class LabDataFetch {
     dbName:string='labpatrol.db'
@@ -149,4 +154,59 @@ export class LabDataFetch {
         exaOnt = await this.dbStore?.queryAll(tableName) as TableSchema[]
         return exaOnt;
     }       
+
+    // async queryLatestAxosCard(period:number) {
+    //     let rows = await this.dbStore?.queryLatestTbs() as TableSchema[]
+    //     let axoscardtbs:string[] =[]
+    //     let curtime = new Date().getTime()
+    //     for(let i in rows){
+    //         let tbName = rows[i]['name']
+    //         let tstr = tbName.
+    //         let year = tbName.split()
+    //         let tbtime = new Date(,,).getTime()
+    //         if(rows[i]['name'].indexOf('axoscard')!=-1 && tbtime > curtime - period*60*60*1000)
+    //             axoscardtbs.push(tbName)
+    //     }
+    //     return axoscardtbs;
+    // }
+
+}
+
+
+if (__filename === require.main?.filename) {
+    (async () => {
+
+        let labData = new LabDataFetch()
+        await labData.openDb('./labpatrol.db')
+        // let res = await labData?.queryLatestAxosCard(24) 
+
+        let rows = await labData.dbStore?.queryLatestTbs() as TableSchema[]
+        let tbTime = rows[10000]['name'].slice(7)
+        let year = +tbTime.slice(0,4)
+        let mond:MonthDict = {
+            'Jan':1,
+            'Feb':2,
+            'Mar':3,
+            'Apr':4,
+            'May':5,
+            'Jun':6,
+            'Jul':7,
+            'Aug':8,
+            'Sep':9,
+            'Oct':10,
+            'Nov':11,
+            'Dec':12
+        }
+        let month = mond[tbTime.slice(4,7)]
+        let day = +tbTime.slice(7,9)
+        let hour = +tbTime.slice(9,11)
+        let mm = +tbTime.slice(11,13)
+        let tbDate = new Date(year,month,day,hour,mm,0).getTime()
+        console.log(tbTime,year,month,day,hour,mm)
+        console.log(tbDate)
+
+        // let curtime = new Date().getTime()
+        // console.log(curtime)
+
+    })()    
 }

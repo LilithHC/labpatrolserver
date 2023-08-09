@@ -8,7 +8,6 @@ import {DiagLldpConn, DiagLldpNode} from "./DiagPub"
 
 const nodemailer = require("nodemailer");
 const cron = require("node-cron")
-const Database = require('better-sqlite3')
 
 
 let transporter = nodemailer.createTransport({
@@ -49,8 +48,8 @@ class LabPatrolServer extends BackendServer {
 
     async loadTableInfo() {
         this.labData = new LabDataFetch()
-        await this.labData.openDb('../labpatrol/labpatrol.db')
-
+        // await this.labData.openDb('../labpatrol/labpatrol.db')
+        await this.labData.openDb('./labpatrol.db')
 
     }
 
@@ -529,42 +528,41 @@ if (__filename === require.main?.filename) {
         let bkend = new LabPatrolServer(3721)
         await bkend.init();
 
-    
+
 
         //每分钟的第30s执行
-        await cron.schedule('30 * * * * *', async()=>{
+        // await cron.schedule('30 * * * * *', async()=>{
 
-            const db = new Database('../labpatrol/labpatrol.db')
-            const getOfflineDevices = db.prepare('SELECT * FROM axoscard2023Aug021239 WHERE offline = 1')
-            var rows = getOfflineDevices.all()
+        //     const getOfflineDevices = db.prepare('SELECT * FROM axoscard2023Aug021239 WHERE offline = 1')
+        //     var rows = getOfflineDevices.all()
 
-            let offDevices = rows
-            let content=""
-            for(let i in offDevices){
-                content += "address:"+offDevices[i]['address']+" platform:"+offDevices[i]['platform']+" cardPosition:"+offDevices[i]['cardPosition']+"<br>"
-            }
+        //     let offDevices = rows
+        //     let content=""
+        //     for(let i in offDevices){
+        //         content += "address:"+offDevices[i]['address']+" platform:"+offDevices[i]['platform']+" cardPosition:"+offDevices[i]['cardPosition']+"<br>"
+        //     }
 
-            let msg = {
-                from: "testemail012@sina.com", // sender address
-                to: "1149643038@qq.com", // list of receivers
-                subject: "card offline notify", // Subject line
-                html: "<b>card pull-out:<br>"+content+"</b>", // html body
-                // 考虑用附件形式发送
-            }
+        //     let msg = {
+        //         from: "testemail012@sina.com", // sender address
+        //         to: "1149643038@qq.com", // list of receivers
+        //         subject: "card offline notify", // Subject line
+        //         html: "<b>card pull-out:<br>"+content+"</b>", // html body
+        //         // 考虑用附件形式发送
+        //     }
 
             
-            // 满足条件
-            if(offDevices.length>0){
-                await transporter.sendMail(msg,(error:any,info:any)=>{
-                    if(error){
-                        throw error
-                    }else{
-                        console.log("Message sent: %",info.messageId)
-                    }
-                })
-            }
+        //     // 满足条件
+        //     if(offDevices.length>0){
+        //         await transporter.sendMail(msg,(error:any,info:any)=>{
+        //             if(error){
+        //                 throw error
+        //             }else{
+        //                 console.log("Message sent: %",info.messageId)
+        //             }
+        //         })
+        //     }
 
-        })
+        // })
 
 
         await bkend.run();

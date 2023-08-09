@@ -168,6 +168,22 @@ export class DataStore {
 
 
     }
+
+
+    async queryLatestTbs() {
+        let sql = `SELECT name FROM sqlite_master WHERE TYPE = 'table' `
+        return new Promise((resolve)=>{
+            this.db?.all(sql, [], (err, rows) => {
+                if (err) {
+                   logger.error('queryLatestTbs ' + err)
+                }
+                logger.info(rows)
+                resolve(rows)
+            });
+        })
+    }
+
+
 }
 
 
@@ -189,20 +205,20 @@ if (__filename === require.main?.filename) {
             'name is a': 'SAA',
             'age':'150'
         }
-        await dbStore.createDb(':memory:')
-        await dbStore.createDbTable('member', dbSchema)
-        await dbStore.createDbTable('exa1623303815974', dbSchema)
+        // await dbStore.createDb(':memory:')
+        // await dbStore.createDbTable('member', dbSchema)
+        // await dbStore.createDbTable('exa1623303815974', dbSchema)
         
-        await dbStore.insertData('member', data)
-        await dbStore.insertData('member', data1)
-        await dbStore.insertData('member', data1)
+        // await dbStore.insertData('member', data)
+        // await dbStore.insertData('member', data1)
+        // await dbStore.insertData('member', data1)
         
-        await dbStore.queryAll('member')
+        // await dbStore.queryAll('member')
 
-        await dbStore.deleteData('member', data1)
-        await dbStore.queryAll('member')
-        await dbStore.insertData('member', data1)
-        await dbStore.queryAll('member')
+        // await dbStore.deleteData('member', data1)
+        // await dbStore.queryAll('member')
+        // await dbStore.insertData('member', data1)
+        // await dbStore.queryAll('member')
         let datacond:TableSchema = {
             "id":"1234",
         }
@@ -210,11 +226,11 @@ if (__filename === require.main?.filename) {
             "id":"1234",
             "name is a":"changed"
         }
-        await dbStore.updateData('member', dataChg, datacond)
-        await dbStore.queryAll('member')
+        // await dbStore.updateData('member', dataChg, datacond)
+        // await dbStore.queryAll('member')
 
         await dbStore.createDb('./labpatrol.db')
-        let rows = await dbStore.queryAll('tbAvailableDesc')
+        let rows = await dbStore.queryLatestTbs()
         console.log(rows)
         // await dbStore.deleteAllWithCond('member', data1);
         // await dbStore.queryAll('member')
