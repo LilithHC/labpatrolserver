@@ -22,9 +22,7 @@ export class DataStore {
                 resovle(0)
             });
 
-        }
-        )
-
+        })
     }
 
     async createDbTable(tableName: string, tableSchema: TableSchema) {
@@ -52,6 +50,41 @@ export class DataStore {
         })
 
     }
+
+    async addTableColumn(tableName:string,  columnName:string) {
+        let dbDefineStr = `ALTER TABLE ${tableName} ADD COLUMN ${columnName}`
+        return new Promise((resovle)=>{
+            if (this.db) {
+                this.db.run(dbDefineStr, (error) => {
+                    if (error) {
+                        logger.error('add column' + error)
+                        resovle(-1)
+                    }else {
+                        logger.info('add column success')
+                        resovle(0)
+                    }
+                })
+            }
+        })           
+    }
+
+    async dropTableColumn(tableName:string,  columnName:string) {
+      let dbDefineStr = `ALTER TABLE ${tableName} DROP COLUMN ${columnName}`
+        return new Promise((resovle)=>{
+            if (this.db) {
+                this.db.run(dbDefineStr, (error) => {
+                    if (error) {
+                        logger.error('drop column' + error)
+                        resovle(-1)
+                    }else {
+                        logger.info('drop column success')
+                        resovle(0)
+                    }
+                })
+            }
+        })           
+    }
+
 
     async insertData(tableName: string, tableData: TableSchema) {
 
@@ -169,7 +202,6 @@ export class DataStore {
 
     }
 
-
     async queryLatestTbs() {
         let sql = `SELECT name FROM sqlite_master WHERE TYPE = 'table' `
         return new Promise((resolve)=>{
@@ -183,6 +215,18 @@ export class DataStore {
         })
     }
 
+    async queryField(tbName:string,fieldName:string) {
+        let sql = `SELECT * FROM sqlite_master WHERE TYPE = 'table' AND TBL_NAME = '${tbName}' AND SQL LIKE '%${fieldName}%' `
+        return new Promise((resolve)=>{
+            this.db?.all(sql, [], (err, rows) => {
+                if (err) {
+                   logger.error('queryfield ' + err)
+                }
+                logger.info(rows)
+                resolve(rows)
+            });
+        })
+    }
 
 }
 
@@ -205,7 +249,7 @@ if (__filename === require.main?.filename) {
             'name is a': 'SAA',
             'age':'150'
         }
-        // await dbStore.createDb(':memory:')
+
         // await dbStore.createDbTable('member', dbSchema)
         // await dbStore.createDbTable('exa1623303815974', dbSchema)
         
@@ -229,9 +273,10 @@ if (__filename === require.main?.filename) {
         // await dbStore.updateData('member', dataChg, datacond)
         // await dbStore.queryAll('member')
 
-        await dbStore.createDb('./labpatrol.db')
-        let rows = await dbStore.queryLatestTbs()
-        console.log(rows)
+        // await dbStore.createDb('./labpatrol.db')
+        // let rows = await dbStore.queryField('tbAvailableDesc','axosCard')
+        // dbStore?.addTableColumn('tbAvailableDesc','offaxoscard')
+        // rows = await dbStore.queryField('tbAvailableDesc','offaxoscard')
         // await dbStore.deleteAllWithCond('member', data1);
         // await dbStore.queryAll('member')
     })()    

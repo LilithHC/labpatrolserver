@@ -79,7 +79,10 @@ class LabPatrolServer extends BackendServer {
                 break;                  
             case DBType.DBType_EXA_LLDP:
                 rows = await this.labData?.queryExaLldp() as TableSchema[]
-                break;                  
+                break;      
+            case DBType.DBType_OFF_AXOS_CARD:
+                rows = await this.labData?.queryOffAxosCard() as TableSchema[]
+                break;             
         }
 
         if (filter === '') {
@@ -201,6 +204,58 @@ class LabPatrolServer extends BackendServer {
             }
         }
         this.registRouteCall({ type: 'get', route: '/axoscard', callBack: fetchAxosCallBack })  
+
+        let fetchOffAxosCallBack = async function (ctx:Context, next:any) {
+            ctx.status = 200;
+            let ctxQuery = ctx.query;
+            let startIdx = 0;
+            let eachFetch = that.eachFetch;
+            let filter = ''
+            // console.log(ctx)
+            if (ctxQuery.eachFetch) {
+                eachFetch = +ctxQuery.eachFetch;
+            }
+            // start from 0
+            if (ctxQuery.pageNum) {
+                startIdx = (+ctxQuery.pageNum - 1) * eachFetch;
+            }
+
+            if (ctxQuery.filter) {
+                filter = ctxQuery.filter as string
+            }
+            ctx.set('Content-Type', 'application/json')
+            ctx.set("Access-Control-Allow-Origin", "*");
+            try {
+                // let result = await this.login.run(data) || {}
+
+                // let rows = await that.queryData(DBType.DBType_AXOS_CARD, filter) as TableSchema[]
+                let rows = await that.queryData(DBType.DBType_OFF_AXOS_CARD, filter) as TableSchema[]
+                let res:TableSchema[] =[]
+                let resCount = 0;
+                let totalCount = 0;
+                if (rows && rows.length > 0 && startIdx < rows.length){
+                    totalCount = rows.length
+                    for (let jj = startIdx; jj < startIdx + eachFetch && jj < rows.length; jj++) {
+                        res.push(rows[jj])
+                        resCount++;
+                    }
+                }
+                let result:FetchResponse = {
+                    code:200, 
+                    message: {
+                        totalCount: totalCount,
+                        resCount:resCount,
+                        res:res
+                    }
+                }
+                // ctx.set('set-cookie', _.get(result, 'cookies', []).map(cookie => typeof (cookie) === 'string' ? cookie : `${cookie.name}=${cookie.value}`).join('; '))
+                ctx.response.body = result;
+            } catch (e) {
+                logger.error('error handle fetch get')
+            }
+        }
+        this.registRouteCall({ type: 'get', route: '/offaxoscard', callBack: fetchOffAxosCallBack })  
+
 
         let fetchExaOntCallBack = async function (ctx:Context, next:any) {
             ctx.status = 200;
@@ -527,42 +582,64 @@ if (__filename === require.main?.filename) {
     (async () => {
         let bkend = new LabPatrolServer(3721)
         await bkend.init();
+       
+        //每30分钟执行
+        await cron.schedule('*/2 * * * *', async()=>{
+            let res = await bkend.labData?.getOfflineAxosCard(72) as TableSchema[]
+            await bkend.labData?.writeOfflineAxosCard(res)
 
+            let content = ""
+            // for(let i in res){
+            //     for(let key in res[i]){
+            //         content += res[i][key]+" "
+            //     }
+            //     content += "<br>"
+            // }
 
+            content = `
+            <br>
+            <table width="100%" style="border-collapse: collapse; border-spacing: 0;border: 0;height:120px;">
+                            <tr>
+                                <td>  </td>
+                                <td> 摸鱼部 </td>
+                            </tr>
+                            <tr>
+                                <td>上班摸鱼有限公司</td>
+                            </tr>
+                            <tr>
+                                <td> 电话:</td>
+                                <td>139 1xxx 5xxx </td>
+                                <td> 热线:</td>
+                                <td>400 0xx 5xxx</td>
+                            </tr>
+                            <tr>
+                                <td> 官网:</td>
+                                <td> www.moyu.com
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>地址:</td>
+                                <td">世界摸鱼广场 </td>
+                            </tr>
+                        </table>
+            `
+        
+            let msg = {
+                from: "testemail012@sina.com", // sender address
+                to: "zhihan.zhang@calix.com", // list of receivers
+                subject: "card offline notification", // Subject line
+                html: content, // html body
+            }
+   
+            await transporter.sendMail(msg,(error:any,info:any)=>{
+                if(error){
+                    throw error
+                }else{
+                    console.log("Message sent: %",info.messageId)
+                }
+            })
 
-        //每分钟的第30s执行
-        // await cron.schedule('30 * * * * *', async()=>{
-
-        //     const getOfflineDevices = db.prepare('SELECT * FROM axoscard2023Aug021239 WHERE offline = 1')
-        //     var rows = getOfflineDevices.all()
-
-        //     let offDevices = rows
-        //     let content=""
-        //     for(let i in offDevices){
-        //         content += "address:"+offDevices[i]['address']+" platform:"+offDevices[i]['platform']+" cardPosition:"+offDevices[i]['cardPosition']+"<br>"
-        //     }
-
-        //     let msg = {
-        //         from: "testemail012@sina.com", // sender address
-        //         to: "1149643038@qq.com", // list of receivers
-        //         subject: "card offline notify", // Subject line
-        //         html: "<b>card pull-out:<br>"+content+"</b>", // html body
-        //         // 考虑用附件形式发送
-        //     }
-
-            
-        //     // 满足条件
-        //     if(offDevices.length>0){
-        //         await transporter.sendMail(msg,(error:any,info:any)=>{
-        //             if(error){
-        //                 throw error
-        //             }else{
-        //                 console.log("Message sent: %",info.messageId)
-        //             }
-        //         })
-        //     }
-
-        // })
+        })
 
 
         await bkend.run();

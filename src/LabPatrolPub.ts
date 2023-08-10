@@ -21,6 +21,7 @@ export enum DBType{
     DBType_AXOS_MODULE = 5,
     DBType_EXA_MODULE = 6,
     DBType_AXOS_LLDP = 7,
+    DBType_OFF_AXOS_CARD = 8,
     DBType_EXA_LLDP
 };
 
